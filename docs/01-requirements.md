@@ -50,7 +50,7 @@ sources; nothing is simulated.
 | FR-06 | The system shall archive every raw message to Cloud Storage so any day can be replayed. |
 | FR-07 | The system shall validate records and send invalid ones to a quarantine table with the failed rule name. |
 | FR-08 | The system shall deduplicate trades on `product_id` + `trade_id`. |
-| FR-09 | The system shall detect and log gaps in the Coinbase `sequence` numbers. |
+| FR-09 | The system shall detect and log gaps in `trade_id` per product (missed trades). |
 | FR-10 | The system shall build 1-minute OHLC candles per pair using event time. |
 | FR-11 | The system shall evaluate the five anomaly rules and write alerts to `gold.fact_anomalies`. |
 | FR-12 | The system shall keep the history of asset metadata changes (SCD Type 2 in `dim_asset`). |

@@ -28,6 +28,10 @@ One message = one completed trade.
 | `price` | NUMERIC | `price` | Arrives as text, converted to exact decimal |
 | `size` | NUMERIC | `size` | Quantity traded |
 | `side` | STRING | `side` | Side of the **maker** order: `buy` or `sell` |
+| `maker_order_id` | STRING | `maker_order_id` | Resting order that was hit |
+| `taker_order_id` | STRING | `taker_order_id` | Incoming order; one taker can create several trades |
+
+**Phase 2 finding:** `sequence` jumps between trades (it counts all order-book events, not only trades), so gap detection uses `trade_id` per product instead.
 
 **Natural key:** `product_id` + `trade_id` (used to remove duplicates).
 
