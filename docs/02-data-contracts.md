@@ -53,7 +53,7 @@ One message = latest price plus the best buy and sell offers.
 
 **Natural key:** `product_id` + `sequence`.
 
-## 3. asset_snapshot (CoinGecko `/coins/markets`) *(confirm in Phase 2)*
+## 3. asset_snapshot (CoinGecko `/coins/markets`)
 
 One message = one coin's data at one poll.
 
@@ -67,6 +67,9 @@ One message = one coin's data at one poll.
 | `market_cap_rank` | INT64 | Changes over time, tracked by SCD2 in `dim_asset` |
 | `total_volume_usd` | NUMERIC | |
 | `source_updated_ts` | TIMESTAMP | When CoinGecko last updated this coin |
+**Phase 2 findings:** numeric fields arrive as JSON numbers, so parse with `parse_float=Decimal`.
+`max_supply` and `roi` can be null; `roi` is a nested object and stays in the raw payload only.
+`last_updated` is identical for all coins in one response.
 
 **Natural key:** `coin_id` + `source_updated_ts`.
 
