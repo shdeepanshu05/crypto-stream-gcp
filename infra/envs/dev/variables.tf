@@ -8,3 +8,8 @@ variable "region" {
   type        = string
   default     = "us-central1"
 }
+
+variable "admin_email" {
+  description = "Human admin allowed to impersonate workload SAs for local testing"
+  type        = string
+}

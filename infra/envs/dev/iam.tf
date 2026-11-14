@@ -71,3 +71,9 @@ resource "google_bigquery_dataset_iam_member" "orchestrator_writes" {
   role       = "roles/bigquery.dataEditor"
   member     = local.sa["sa-orchestrator"]
 }
+# Local testing: the admin may impersonate sa-ingest-run (Token Creator on this SA only)
+resource "google_service_account_iam_member" "admin_impersonates_ingest" {
+  service_account_id = google_service_account.workload["sa-ingest-run"].name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "user:${var.admin_email}"
+}

@@ -1,0 +1,2 @@
+google-cloud-pubsub==<version from pip show>
+websockets==<version from pip show>
