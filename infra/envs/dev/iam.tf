@@ -77,3 +77,30 @@ resource "google_service_account_iam_member" "admin_impersonates_ingest" {
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = "user:${var.admin_email}"
 }
+# ---------- sa-cicd-deployer: deploy code, never touch data ----------
+resource "google_artifact_registry_repository_iam_member" "deployer_pushes_images" {
+  location   = google_artifact_registry_repository.containers.location
+  repository = google_artifact_registry_repository.containers.name
+  role       = "roles/artifactregistry.writer"
+  member     = local.sa["sa-cicd-deployer"]
+}
+
+resource "google_project_iam_member" "deployer_run_developer" {
+  project = var.project_id
+  role    = "roles/run.developer"
+  member  = local.sa["sa-cicd-deployer"]
+}
+
+# The deployer may attach sa-ingest-run to Cloud Run (actAs), but cannot become it
+resource "google_service_account_iam_member" "deployer_acts_as_ingest" {
+  service_account_id = google_service_account.workload["sa-ingest-run"].name
+  role               = "roles/iam.serviceAccountUser"
+  member             = local.sa["sa-cicd-deployer"]
+}
+
+# Local deploys until Phase 15 (then GitHub Actions takes over and this is removed)
+resource "google_service_account_iam_member" "admin_impersonates_deployer" {
+  service_account_id = google_service_account.workload["sa-cicd-deployer"].name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "user:${var.admin_email}"
+}

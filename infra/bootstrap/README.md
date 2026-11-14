@@ -53,6 +53,11 @@ gcloud auth application-default login --impersonate-service-account $TF_SA
 ```
 Expected ADC type: `impersonated_service_account`.
 
+## 8. you (gcloud CLI login, project Owner), changing the provisioner’s permissions
+```powershell
+gcloud projects add-iam-policy-binding crypto-de-dev-4821 --member="serviceAccount:sa-tf-provisioner@crypto-de-dev-4821.iam.gserviceaccount.com" --role="roles/artifactregistry.admin" --condition=None --quiet
+```
+
 ## Security notes
 - No service-account keys exist. Never create one.
 - sa-tf-provisioner holds project-level admin roles (it must create resources), so only

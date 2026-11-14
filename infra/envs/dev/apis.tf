@@ -3,6 +3,8 @@ locals {
     "pubsub.googleapis.com",
     "bigquery.googleapis.com",
     "secretmanager.googleapis.com",
+    "run.googleapis.com",
+    "artifactregistry.googleapis.com",
   ]
 }
 
