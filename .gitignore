@@ -1,0 +1,39 @@
+# ===== Secrets & credentials =====
+# Block all JSON by default (service account keys are JSON)
+*.json
+# Allow JSON we deliberately keep in the repo (used from Phase 2 onwards)
+!samples/**/*.json
+!schemas/**/*.json
+
+# Environment files (any variant), but keep the example template
+.env
+.env.*
+!.env.example
+
+# ===== Terraform =====
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+*.tfplan
+# NOTE: .terraform.lock.hcl is NOT ignored on purpose; commit it.
+
+# ===== Python =====
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# ===== OS / editor =====
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
