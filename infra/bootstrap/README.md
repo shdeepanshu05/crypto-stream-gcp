@@ -58,6 +58,11 @@ Expected ADC type: `impersonated_service_account`.
 gcloud projects add-iam-policy-binding crypto-de-dev-4821 --member="serviceAccount:sa-tf-provisioner@crypto-de-dev-4821.iam.gserviceaccount.com" --role="roles/artifactregistry.admin" --condition=None --quiet
 ```
 
+## 9. Phase 6 addition
+```powershell
+gcloud iam service-accounts add-iam-policy-binding sa-pubsub-bq-writer@crypto-de-dev-4821.iam.gserviceaccount.com --member="serviceAccount:sa-tf-provisioner@crypto-de-dev-4821.iam.gserviceaccount.com" --role="roles/iam.serviceAccountUser" --project=crypto-de-dev-4821
+```
+
 ## Security notes
 - No service-account keys exist. Never create one.
 - sa-tf-provisioner holds project-level admin roles (it must create resources), so only
