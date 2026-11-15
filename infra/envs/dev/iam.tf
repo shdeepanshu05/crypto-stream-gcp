@@ -7,6 +7,7 @@ locals {
     "sa-dataflow-worker"  = "Runs Dataflow streaming workers"
     "sa-orchestrator"     = "Runs Workflows and SQL transformations"
     "sa-scheduler"        = "Triggers scheduled jobs"
+    "sa-pubsub-gcs-writer" = "Writes Pub/Sub messages into the raw archive bucket"
   }
 
   sa = { for name, sa in google_service_account.workload : name => "serviceAccount:${sa.email}" }

@@ -61,6 +61,7 @@ gcloud projects add-iam-policy-binding crypto-de-dev-4821 --member="serviceAccou
 ## 9. Phase 6 addition
 ```powershell
 gcloud iam service-accounts add-iam-policy-binding sa-pubsub-bq-writer@crypto-de-dev-4821.iam.gserviceaccount.com --member="serviceAccount:sa-tf-provisioner@crypto-de-dev-4821.iam.gserviceaccount.com" --role="roles/iam.serviceAccountUser" --project=crypto-de-dev-4821
+gcloud iam service-accounts add-iam-policy-binding sa-pubsub-gcs-writer@crypto-de-dev-4821.iam.gserviceaccount.com --member="serviceAccount:sa-tf-provisioner@crypto-de-dev-4821.iam.gserviceaccount.com" --role="roles/iam.serviceAccountUser" --project=crypto-de-dev-4821
 ```
 
 ## Security notes
