@@ -77,6 +77,13 @@ Verify (expected: no output):
 ```powershell
 gcloud projects get-iam-policy crypto-de-dev-4821 --flatten="bindings[].members" --filter="bindings.members:compute@developer" --format="table(bindings.role)"
 ```
+## 11. Phase 8 addition: Cloud Scheduler
+Terraform creates scheduler jobs that run as sa-scheduler and grants it run.invoker on Cloud Run jobs.
+```powershell
+gcloud projects add-iam-policy-binding crypto-de-dev-4821 --member="serviceAccount:sa-tf-provisioner@crypto-de-dev-4821.iam.gserviceaccount.com" --role="roles/cloudscheduler.admin" --condition=None --quiet
+gcloud projects add-iam-policy-binding crypto-de-dev-4821 --member="serviceAccount:sa-tf-provisioner@crypto-de-dev-4821.iam.gserviceaccount.com" --role="roles/run.admin" --condition=None --quiet
+gcloud iam service-accounts add-iam-policy-binding sa-scheduler@crypto-de-dev-4821.iam.gserviceaccount.com --member="serviceAccount:sa-tf-provisioner@crypto-de-dev-4821.iam.gserviceaccount.com" --role="roles/iam.serviceAccountUser" --project=crypto-de-dev-4821
+```
 
 ## Security notes
 - No service-account keys exist. Never create one.

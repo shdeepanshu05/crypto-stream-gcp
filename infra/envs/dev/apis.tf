@@ -7,6 +7,7 @@ locals {
     "artifactregistry.googleapis.com",
     "dataflow.googleapis.com",
     "compute.googleapis.com", # Dataflow workers are Compute Engine VMs
+    "cloudscheduler.googleapis.com",
   ]
 }
 
