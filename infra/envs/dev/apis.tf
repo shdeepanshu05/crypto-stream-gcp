@@ -5,6 +5,8 @@ locals {
     "secretmanager.googleapis.com",
     "run.googleapis.com",
     "artifactregistry.googleapis.com",
+    "dataflow.googleapis.com",
+    "compute.googleapis.com", # Dataflow workers are Compute Engine VMs
   ]
 }
 
