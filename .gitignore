@@ -39,3 +39,10 @@ desktop.ini
 .vscode/
 dataflow/testdata/
 dataflow/out/
+# Terraform plan files saved without an extension (terraform plan -out tfplan)
+tfplan
+
+# Python packaging build output (setup.py / Beam staging)
+*.egg-info/
+build/
+dist/

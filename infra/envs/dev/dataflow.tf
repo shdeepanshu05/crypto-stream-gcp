@@ -51,6 +51,11 @@ resource "google_storage_bucket" "dataflow" {
       type = "Delete"
     }
   }
+  # Temp files only: don't keep (and pay for) 7-day soft-deleted copies.
+  # Beam warned about this at launch.
+  soft_delete_policy {
+    retention_duration_seconds = 0
+  }
 }
 
 # WORKER: read/write its own temp and staging files, in this bucket only.
@@ -65,6 +70,21 @@ resource "google_storage_bucket_iam_member" "deployer_stages_code" {
   bucket = google_storage_bucket.dataflow.name
   role   = "roles/storage.objectAdmin"
   member = local.deployer_member
+}
+
+# objectAdmin covers OBJECTS only. Beam also calls storage.buckets.get to check the
+# bucket before staging/temp writes (the launch failed with 403 without this).
+# legacyBucketReader = buckets.get + objects.list, on this bucket only.
+resource "google_storage_bucket_iam_member" "deployer_reads_dataflow_bucket" {
+  bucket = google_storage_bucket.dataflow.name
+  role   = "roles/storage.legacyBucketReader"
+  member = local.deployer_member
+}
+
+resource "google_storage_bucket_iam_member" "dataflow_worker_reads_bucket" {
+  bucket = google_storage_bucket.dataflow.name
+  role   = "roles/storage.legacyBucketReader"
+  member = local.dataflow_worker_member
 }
 
 # LAUNCHER: create, inspect, drain and cancel Dataflow jobs.

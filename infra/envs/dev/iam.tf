@@ -1,12 +1,12 @@
 # ---------- Workload service accounts ----------
 locals {
   workload_sas = {
-    "sa-cicd-deployer"    = "Deploys code from GitHub Actions"
-    "sa-ingest-run"       = "Publishes API data to Pub/Sub"
-    "sa-pubsub-bq-writer" = "Writes Pub/Sub messages into Bronze"
-    "sa-dataflow-worker"  = "Runs Dataflow streaming workers"
-    "sa-orchestrator"     = "Runs Workflows and SQL transformations"
-    "sa-scheduler"        = "Triggers scheduled jobs"
+    "sa-cicd-deployer"     = "Deploys code from GitHub Actions"
+    "sa-ingest-run"        = "Publishes API data to Pub/Sub"
+    "sa-pubsub-bq-writer"  = "Writes Pub/Sub messages into Bronze"
+    "sa-dataflow-worker"   = "Runs Dataflow streaming workers"
+    "sa-orchestrator"      = "Runs Workflows and SQL transformations"
+    "sa-scheduler"         = "Triggers scheduled jobs"
     "sa-pubsub-gcs-writer" = "Writes Pub/Sub messages into the raw archive bucket"
   }
 
