@@ -64,8 +64,25 @@ gcloud iam service-accounts add-iam-policy-binding sa-pubsub-bq-writer@crypto-de
 gcloud iam service-accounts add-iam-policy-binding sa-pubsub-gcs-writer@crypto-de-dev-4821.iam.gserviceaccount.com --member="serviceAccount:sa-tf-provisioner@crypto-de-dev-4821.iam.gserviceaccount.com" --role="roles/iam.serviceAccountUser" --project=crypto-de-dev-4821
 ```
 
+## 10. Phase 7: remove the default Compute SA's Editor grant
+Enabling `compute.googleapis.com` (needed for Dataflow workers) automatically created the
+Compute Engine default service account and granted it `roles/editor` on the project.
+Nothing uses it (Dataflow runs as `sa-dataflow-worker`, the publisher as `sa-ingest-run`),
+so the grant was removed. Not in Terraform: Google created this binding, and
+`google_project_iam_member` can only add bindings, not remove unmanaged ones.
+```powershell
+gcloud projects remove-iam-policy-binding crypto-de-dev-4821 --member="serviceAccount:874058041757-compute@developer.gserviceaccount.com" --role="roles/editor"
+```
+Verify (expected: no output):
+```powershell
+gcloud projects get-iam-policy crypto-de-dev-4821 --flatten="bindings[].members" --filter="bindings.members:compute@developer" --format="table(bindings.role)"
+```
+
 ## Security notes
 - No service-account keys exist. Never create one.
 - sa-tf-provisioner holds project-level admin roles (it must create resources), so only
   the admin (and later CI) may impersonate it.
-
+- The Compute Engine default SA (`874058041757-compute@developer...`) has no project roles
+  (section 10). If the project is ever rebuilt, remove its Editor grant again.
+- Do NOT remove `roles/editor` from `874058041757@cloudservices.gserviceaccount.com`
+  (Google APIs Service Agent). It is Google-managed and used to create Dataflow worker VMs.
