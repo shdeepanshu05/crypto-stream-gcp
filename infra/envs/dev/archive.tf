@@ -46,7 +46,7 @@ resource "google_pubsub_subscription" "archive" {
   topic = google_pubsub_topic.main[each.value].id
 
   # Must be at least max_duration below
-  ack_deadline_seconds = 600
+  ack_deadline_seconds = 300
 
   cloud_storage_config {
     bucket                   = google_storage_bucket.raw_archive.name
