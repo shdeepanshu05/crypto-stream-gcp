@@ -43,3 +43,19 @@ resource "google_bigquery_table" "gold_ohlcv_1m_inr" {
 
   depends_on = [google_bigquery_table.gold_ohlcv_1m]
 }
+# Phase 9: CoinGecko vs Coinbase price at the same minute (cross-source check).
+resource "google_bigquery_table" "gold_price_divergence" {
+  dataset_id          = google_bigquery_dataset.layer["gold"].dataset_id
+  table_id            = "price_divergence"
+  deletion_protection = false # a view holds no data
+
+  view {
+    query          = file("${path.module}/../../../sql/gold/views/price_divergence.sql")
+    use_legacy_sql = false
+  }
+
+  depends_on = [
+    google_bigquery_table.gold_ohlcv_1m,
+    google_bigquery_table.silver_asset_snapshots,
+  ]
+}
