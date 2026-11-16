@@ -8,6 +8,8 @@ locals {
     "dataflow.googleapis.com",
     "compute.googleapis.com", # Dataflow workers are Compute Engine VMs
     "cloudscheduler.googleapis.com",
+    "workflows.googleapis.com",
+    "workflowexecutions.googleapis.com",
   ]
 }
 
