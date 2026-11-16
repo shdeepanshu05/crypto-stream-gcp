@@ -107,3 +107,17 @@ resource "google_service_account_iam_member" "deployer_acts_as_dataflow_worker" 
   role               = "roles/iam.serviceAccountUser"
   member             = local.deployer_member
 }
+# Phase 8 backfill: the WORKER reads the raw archive (read-only, this bucket only)...
+resource "google_storage_bucket_iam_member" "dataflow_worker_reads_archive" {
+  bucket = google_storage_bucket.raw_archive.name
+  role   = "roles/storage.objectViewer"
+  member = local.dataflow_worker_member
+}
+
+# ...and runs BigQuery load jobs (FILE_LOADS). Jobs are project-scoped;
+# WHICH tables it may write is still limited by dataEditor on silver only.
+resource "google_project_iam_member" "dataflow_worker_job_user" {
+  project = var.project_id
+  role    = "roles/bigquery.jobUser"
+  member  = local.dataflow_worker_member
+}

@@ -105,3 +105,10 @@ resource "google_service_account_iam_member" "admin_impersonates_deployer" {
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = "user:${var.admin_email}"
 }
+# Admin may impersonate the orchestrator to run SQL by hand (backfill MERGE).
+# Later, Workflows runs these as sa-orchestrator automatically.
+resource "google_service_account_iam_member" "admin_impersonates_orchestrator" {
+  service_account_id = google_service_account.workload["sa-orchestrator"].name
+  role               = "roles/iam.serviceAccountTokenCreator"
+  member             = "user:${var.admin_email}"
+}
