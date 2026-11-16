@@ -1,11 +1,14 @@
 """Run a SQL file in BigQuery as the current ADC identity (e.g. impersonated sa-orchestrator)."""
 import argparse
 import pathlib
-
+import google.auth
 from google.cloud import bigquery
 
 
 def main() -> None:
+    credentials, _ = google.auth.default()
+    identity = getattr(credentials, "service_account_email", "unknown (not a service account)")
+    print(f"running as: {identity}")
     parser = argparse.ArgumentParser()
     parser.add_argument("sql_file")
     parser.add_argument("--project", default="crypto-de-dev-4821")
