@@ -1,0 +1,4 @@
+*
+!docker/dq-runner/requirements.txt
+!tools/run_dq.py
+!sql/dq/*.sql

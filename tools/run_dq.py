@@ -4,6 +4,7 @@ Contract: each check returns exactly ONE row with
 check_name, layer, severity ('error'|'warn'), failed_count (0 = pass), details.
 Identity: whatever ADC is (should be sa-orchestrator, via impersonation, no key file).
 """
+import google.auth.transport.requests
 import argparse
 import pathlib
 import sys
@@ -48,6 +49,8 @@ def main() -> int:
     args = parser.parse_args()
 
     creds, _ = google.auth.default()
+    creds.refresh(google.auth.transport.requests.Request())  # Cloud Run creds report "default" until refreshed
+    identity = getattr(creds, "service_account_email", None)
     print("running as:", getattr(creds, "service_account_email", "unknown (not a service account!)"))
     client = bigquery.Client(project=PROJECT, credentials=creds, location=LOCATION)
 

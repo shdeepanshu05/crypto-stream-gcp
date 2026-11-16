@@ -39,3 +39,10 @@ resource "google_bigquery_dataset_iam_member" "orchestrator_writes_ops" {
   role       = "roles/bigquery.dataEditor"
   member     = local.dq_orchestrator_member
 }
+
+# Phase 11: the deployer may attach sa-orchestrator to the dq-runner Cloud Run job (and nothing else).
+resource "google_service_account_iam_member" "deployer_acts_as_orchestrator" {
+  service_account_id = "projects/${google_bigquery_dataset.layer["gold"].project}/serviceAccounts/sa-orchestrator@${google_bigquery_dataset.layer["gold"].project}.iam.gserviceaccount.com"
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:sa-cicd-deployer@${google_bigquery_dataset.layer["gold"].project}.iam.gserviceaccount.com"
+}
