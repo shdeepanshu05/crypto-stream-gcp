@@ -29,3 +29,17 @@ resource "google_bigquery_table" "gold_ohlcv_1m" {
     { name = "updated_at", type = "TIMESTAMP", mode = "REQUIRED" },
   ])
 }
+# Phase 9: candles in INR via an as-of FX join. A VIEW: stores nothing, always in sync.
+# The SQL lives in sql/gold/views/ (one source of truth), and Terraform deploys it.
+resource "google_bigquery_table" "gold_ohlcv_1m_inr" {
+  dataset_id          = google_bigquery_dataset.layer["gold"].dataset_id
+  table_id            = "ohlcv_1m_inr"
+  deletion_protection = false # a view holds no data
+
+  view {
+    query          = file("${path.module}/../../../sql/gold/views/ohlcv_1m_inr.sql")
+    use_legacy_sql = false
+  }
+
+  depends_on = [google_bigquery_table.gold_ohlcv_1m]
+}
