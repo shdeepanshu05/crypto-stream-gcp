@@ -2,22 +2,32 @@
 
 Contract: each check returns exactly ONE row with
 check_name, layer, severity ('error'|'warn'), failed_count (0 = pass), details.
-Identity: whatever ADC is (should be sa-orchestrator, via impersonation, no key file).
+Identity: must be sa-orchestrator (impersonation locally, attached identity in Cloud Run; no key file).
+Logging: one JSON line per event on stdout; Cloud Run maps "severity" to the log entry's severity,
+so FAIL lines are ERROR and can trigger alerts.
+Exit codes: 0 = all blocking checks pass, 1 = a blocking check failed, 2 = wrong identity.
 """
-import google.auth.transport.requests
 import argparse
+import json
 import pathlib
 import sys
 import uuid
 from datetime import datetime, timezone
 
 import google.auth
+import google.auth.transport.requests
 from google.cloud import bigquery
 
 PROJECT = "crypto-de-dev-4821"
 LOCATION = "us-central1"
 RESULTS_TABLE = f"{PROJECT}.ops.dq_results"
+EXPECTED_SA = "sa-orchestrator@crypto-de-dev-4821.iam.gserviceaccount.com"
 REQUIRED = {"check_name", "layer", "severity", "failed_count", "details"}
+
+
+def log(severity: str, message: str, **fields) -> None:
+    """Write one structured log line. 'severity' and 'message' are special fields for Cloud Logging."""
+    print(json.dumps({"severity": severity, "message": message, **fields}, default=str), flush=True)
 
 
 def run_check(client: bigquery.Client, path: pathlib.Path) -> dict:
@@ -48,15 +58,20 @@ def main() -> int:
     parser.add_argument("--no-store", action="store_true", help="print results only, do not write to BigQuery")
     args = parser.parse_args()
 
-    creds, _ = google.auth.default()
+    creds, _ = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
     creds.refresh(google.auth.transport.requests.Request())  # Cloud Run creds report "default" until refreshed
     identity = getattr(creds, "service_account_email", None)
-    print("running as:", getattr(creds, "service_account_email", "unknown (not a service account!)"))
+    log("INFO", "dq run starting", identity=identity)
+    if identity != EXPECTED_SA:
+        log("ERROR", f"refusing to run: expected {EXPECTED_SA}", identity=identity,
+            fix=f"gcloud auth application-default login --impersonate-service-account={EXPECTED_SA}")
+        return 2
+
     client = bigquery.Client(project=PROJECT, credentials=creds, location=LOCATION)
 
     files = sorted(pathlib.Path(args.checks_dir).glob("*.sql"))
     if not files:
-        print(f"no checks found in {args.checks_dir}")
+        log("ERROR", f"no checks found in {args.checks_dir}")
         return 1
 
     run_id = str(uuid.uuid4())
@@ -66,7 +81,9 @@ def main() -> int:
         r = run_check(client, path)
         passed = r["failed_count"] == 0
         status = "PASS" if passed else ("WARN" if r["severity"] == "warn" else "FAIL")
-        print(f"{status:4}  {r['check_name']:<35} failed={r['failed_count']}  {r['details']}")
+        severity = "INFO" if passed else ("WARNING" if r["severity"] == "warn" else "ERROR")
+        log(severity, f"{status} {r['check_name']}", check_name=r["check_name"], layer=r["layer"],
+            failed_count=r["failed_count"], details=r["details"], run_id=run_id)
         results.append({**r, "run_id": run_id, "run_ts": run_ts, "passed": passed})
 
     if not args.no_store:
@@ -80,10 +97,12 @@ def main() -> int:
             ),
         )
         job.result()
-        print(f"stored {len(results)} results in {RESULTS_TABLE} (run_id={run_id})")
+        log("INFO", f"stored {len(results)} results", table=RESULTS_TABLE, run_id=run_id)
 
     errors = [r for r in results if not r["passed"] and r["severity"] == "error"]
-    print(f"summary: {len(results)} checks, {len(errors)} blocking failures")
+    log("ERROR" if errors else "INFO",
+        f"summary: {len(results)} checks, {len(errors)} blocking failures",
+        run_id=run_id, checks=len(results), blocking_failures=len(errors))
     return 1 if errors else 0
 
 
