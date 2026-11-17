@@ -85,6 +85,25 @@ gcloud projects add-iam-policy-binding crypto-de-dev-4821 --member="serviceAccou
 gcloud iam service-accounts add-iam-policy-binding sa-scheduler@crypto-de-dev-4821.iam.gserviceaccount.com --member="serviceAccount:sa-tf-provisioner@crypto-de-dev-4821.iam.gserviceaccount.com" --role="roles/iam.serviceAccountUser" --project=crypto-de-dev-4821
 ```
 
+## 13. Monitoring and alerting (Phase 12)
+
+Run once as the human admin (personal account, no impersonation):
+
+    gcloud projects add-iam-policy-binding crypto-de-dev-4821 --member=serviceAccount:sa-tf-provisioner@crypto-de-dev-4821.iam.gserviceaccount.com --role=roles/monitoring.alertPolicyEditor --condition=None
+    gcloud projects add-iam-policy-binding crypto-de-dev-4821 --member=serviceAccount:sa-tf-provisioner@crypto-de-dev-4821.iam.gserviceaccount.com --role=roles/monitoring.notificationChannelEditor --condition=None
+    gcloud projects add-iam-policy-binding crypto-de-dev-4821 --member=serviceAccount:sa-tf-provisioner@crypto-de-dev-4821.iam.gserviceaccount.com --role=roles/logging.configWriter --condition=None
+
+Why logging.configWriter: log-based alert policies are stored as Cloud Logging notification
+rules (permission logging.notificationRules.create). It also allows creating log sinks, so it
+is granted only to the provisioner, never to a workload SA.
+
+Verify:
+
+    gcloud projects get-iam-policy crypto-de-dev-4821 --flatten="bindings[].members" --filter="bindings.members:sa-tf-provisioner@crypto-de-dev-4821.iam.gserviceaccount.com AND (bindings.role:monitoring OR bindings.role:logging)" --format="value(bindings.role)"
+
+Notes: a new log-based alert can take several minutes to become active (the first test right
+after creation did not fire; the second, 12 minutes later, emailed in under a minute).
+
 ## Security notes
 - No service-account keys exist. Never create one.
 - sa-tf-provisioner holds project-level admin roles (it must create resources), so only
