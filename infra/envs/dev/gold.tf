@@ -88,3 +88,36 @@ resource "google_bigquery_table" "gold_anomalies" {
 
   depends_on = [google_bigquery_table.gold_ohlcv_1m]
 }
+
+# Phase 14: serving views for the Looker Studio dashboard (the report reads ONLY these + anomalies).
+resource "google_bigquery_table" "gold_dash_asset_prices" {
+  dataset_id          = google_bigquery_dataset.layer["gold"].dataset_id
+  table_id            = "dash_asset_prices"
+  deletion_protection = false # a view holds no data
+
+  view {
+    query          = file("${path.module}/../../../sql/gold/views/dash_asset_prices.sql")
+    use_legacy_sql = false
+  }
+
+  depends_on = [
+    google_bigquery_table.silver_asset_snapshots,
+    google_bigquery_table.silver_fx_rates,
+  ]
+}
+
+resource "google_bigquery_table" "gold_dash_pipeline_status" {
+  dataset_id          = google_bigquery_dataset.layer["gold"].dataset_id
+  table_id            = "dash_pipeline_status"
+  deletion_protection = false # a view holds no data
+
+  view {
+    query          = file("${path.module}/../../../sql/gold/views/dash_pipeline_status.sql")
+    use_legacy_sql = false
+  }
+
+  depends_on = [
+    google_bigquery_table.gold_anomalies,
+    google_bigquery_table.dq_results,
+  ]
+}
