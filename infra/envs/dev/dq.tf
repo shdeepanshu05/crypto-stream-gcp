@@ -22,14 +22,14 @@ resource "google_bigquery_table" "dq_results" {
   clustering = ["check_name"]
 
   schema = jsonencode([
-    { name = "run_id",       type = "STRING",    mode = "REQUIRED" },
-    { name = "run_ts",       type = "TIMESTAMP", mode = "REQUIRED" },
-    { name = "check_name",   type = "STRING",    mode = "REQUIRED" },
-    { name = "layer",        type = "STRING",    mode = "NULLABLE" },
-    { name = "severity",     type = "STRING",    mode = "REQUIRED" },
-    { name = "failed_count", type = "INT64",     mode = "NULLABLE" },
-    { name = "passed",       type = "BOOL",      mode = "REQUIRED" },
-    { name = "details",      type = "STRING",    mode = "NULLABLE" },
+    { name = "run_id", type = "STRING", mode = "REQUIRED" },
+    { name = "run_ts", type = "TIMESTAMP", mode = "REQUIRED" },
+    { name = "check_name", type = "STRING", mode = "REQUIRED" },
+    { name = "layer", type = "STRING", mode = "NULLABLE" },
+    { name = "severity", type = "STRING", mode = "REQUIRED" },
+    { name = "failed_count", type = "INT64", mode = "NULLABLE" },
+    { name = "passed", type = "BOOL", mode = "REQUIRED" },
+    { name = "details", type = "STRING", mode = "NULLABLE" },
   ])
 }
 

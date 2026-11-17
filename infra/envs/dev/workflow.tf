@@ -38,7 +38,7 @@ resource "google_workflows_workflow" "elt_pipeline" {
   service_account = local.wf_orchestrator_sa
   call_log_level  = "LOG_ERRORS_ONLY"
 
-   source_contents = templatefile("${path.module}/workflows/elt_pipeline.yaml.tftpl", {
+  source_contents = templatefile("${path.module}/workflows/elt_pipeline.yaml.tftpl", {
     sql_asset_snapshots = jsonencode(replace(file("${path.module}/../../../sql/silver/merge_asset_snapshots.sql"), "\r\n", "\n"))
     sql_fx_rates        = jsonencode(replace(file("${path.module}/../../../sql/silver/merge_fx_rates.sql"), "\r\n", "\n"))
     sql_ohlcv_1m        = jsonencode(replace(file("${path.module}/../../../sql/gold/merge_ohlcv_1m.sql"), "\r\n", "\n"))
