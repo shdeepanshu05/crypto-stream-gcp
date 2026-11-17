@@ -72,3 +72,36 @@ resource "google_monitoring_alert_policy" "cloud_run_job_errors" {
     content   = "A Cloud Run job logged an ERROR. The job_name label says which. For dq-runner, the log line's jsonPayload.check_name and details say which check failed."
   }
 }
+# Alert 3: the pipeline stopped running (no success in 90 min). Catches silent failures:
+# Scheduler paused or deleted, IAM revoked, quota exhausted.
+resource "google_monitoring_alert_policy" "elt_pipeline_absent" {
+  display_name = "elt-pipeline has not succeeded in 90 minutes"
+  combiner     = "OR"
+  severity     = "CRITICAL"
+
+  conditions {
+    display_name = "no SUCCEEDED executions for 90 min"
+    condition_absent {
+      filter   = "resource.type = \"workflows.googleapis.com/Workflow\" AND metric.type = \"workflows.googleapis.com/finished_execution_count\" AND metric.labels.status = \"SUCCEEDED\""
+      duration = "5400s"
+      aggregations {
+        alignment_period   = "300s"
+        per_series_aligner = "ALIGN_SUM"
+      }
+      trigger {
+        count = 1
+      }
+    }
+  }
+
+  alert_strategy {
+    auto_close = "1800s"
+  }
+
+  notification_channels = [google_monitoring_notification_channel.owner_email.id]
+
+  documentation {
+    mime_type = "text/markdown"
+    content   = "No successful elt-pipeline run for 90 min. Check the trigger: `gcloud scheduler jobs describe elt-pipeline-trigger --location=us-central1` (state, lastAttemptTime, status). Then `gcloud workflows executions list elt-pipeline --location=us-central1`."
+  }
+}
