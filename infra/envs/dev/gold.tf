@@ -59,3 +59,32 @@ resource "google_bigquery_table" "gold_price_divergence" {
     google_bigquery_table.silver_asset_snapshots,
   ]
 }
+
+# Phase 13: detected anomalies. One row per (rule, entity, event_ts); insert-only.
+resource "google_bigquery_table" "gold_anomalies" {
+  dataset_id          = google_bigquery_dataset.layer["gold"].dataset_id
+  table_id            = "anomalies"
+  deletion_protection = false
+
+  time_partitioning {
+    type  = "DAY"
+    field = "event_ts"
+  }
+  clustering = ["rule", "entity"]
+
+  schema = jsonencode([
+    { name = "anomaly_id", type = "STRING", mode = "REQUIRED", description = "MD5 of rule|entity|event_ts (deterministic, makes reruns idempotent)" },
+    { name = "rule", type = "STRING", mode = "REQUIRED", description = "price_jump | volume_surge | divergence_break" },
+    { name = "entity", type = "STRING", mode = "REQUIRED", description = "coin_id or product_id" },
+    { name = "event_ts", type = "TIMESTAMP", mode = "REQUIRED", description = "when the anomalous data point happened" },
+    { name = "severity", type = "STRING", mode = "REQUIRED", description = "MEDIUM | HIGH" },
+    { name = "observed", type = "FLOAT64", mode = "NULLABLE", description = "the value that was flagged" },
+    { name = "baseline", type = "FLOAT64", mode = "NULLABLE", description = "what normal looked like (mean, or the allowed threshold)" },
+    { name = "spread", type = "FLOAT64", mode = "NULLABLE", description = "typical variation (std dev) of the baseline" },
+    { name = "zscore", type = "FLOAT64", mode = "NULLABLE", description = "standard deviations from the baseline" },
+    { name = "details", type = "STRING", mode = "NULLABLE", description = "human-readable explanation" },
+    { name = "detected_at", type = "TIMESTAMP", mode = "REQUIRED", description = "when the pipeline detected it" },
+  ])
+
+  depends_on = [google_bigquery_table.gold_ohlcv_1m]
+}

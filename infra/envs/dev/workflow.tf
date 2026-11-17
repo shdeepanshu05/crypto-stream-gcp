@@ -42,6 +42,7 @@ resource "google_workflows_workflow" "elt_pipeline" {
     sql_asset_snapshots = jsonencode(replace(file("${path.module}/../../../sql/silver/merge_asset_snapshots.sql"), "\r\n", "\n"))
     sql_fx_rates        = jsonencode(replace(file("${path.module}/../../../sql/silver/merge_fx_rates.sql"), "\r\n", "\n"))
     sql_ohlcv_1m        = jsonencode(replace(file("${path.module}/../../../sql/gold/merge_ohlcv_1m.sql"), "\r\n", "\n"))
+    sql_anomalies       = jsonencode(replace(file("${path.module}/../../../sql/gold/merge_anomalies.sql"), "\r\n", "\n"))
   })
   depends_on = [
     google_cloud_run_v2_job_iam_member.orchestrator_runs_dq,

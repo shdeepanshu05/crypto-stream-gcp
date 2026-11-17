@@ -1,4 +1,4 @@
-# Phase 11: ELT pipeline. Rendered by Terraform templatefile():
+# Phases 11 and 13: ELT pipeline. Rendered by Terraform templatefile():
 #   double-dollar expressions -> Workflows (Terraform leaves them alone)
 #   single-dollar expressions -> filled in by Terraform (the SQL files)
 main:
@@ -7,6 +7,7 @@ main:
         assign:
           - project: $${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
           - location: "us-central1"
+          - dq_execution: {}   # declared up front so later steps can always see it
 
     # Each jobs.insert blocks until the MERGE succeeds or fails.
     # A failed MERGE raises an error -> the workflow stops here (later steps never run).
@@ -70,8 +71,23 @@ main:
           - condition: $${default(map.get(dq_execution, "failedCount"), 0) > 0}
             raise: "DQ checks failed: dq-runner execution reported failed tasks"
 
+    # Anomalies run AFTER DQ passes: never interpret data that failed quality checks.
+    - merge_anomalies:
+        call: googleapis.bigquery.v2.jobs.insert
+        args:
+          projectId: $${project}
+          body:
+            jobReference:
+              location: $${location}
+            configuration:
+              query:
+                query: ${sql_anomalies}
+                useLegacySql: false
+        result: anomalies_job
+
     - done:
         return:
           asset_snapshots_rows: $${default(map.get(asset_job, ["statistics", "query", "numDmlAffectedRows"]), "n/a")}
           fx_rates_rows: $${default(map.get(fx_job, ["statistics", "query", "numDmlAffectedRows"]), "n/a")}
           ohlcv_1m_rows: $${default(map.get(ohlcv_job, ["statistics", "query", "numDmlAffectedRows"]), "n/a")}
+          anomalies_rows: $${default(map.get(anomalies_job, ["statistics", "query", "numDmlAffectedRows"]), "n/a")}
