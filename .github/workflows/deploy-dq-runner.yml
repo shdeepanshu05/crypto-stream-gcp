@@ -1,0 +1,53 @@
+name: deploy-dq-runner
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docker/dq-runner/**"
+      - "tools/run_dq.py"
+      - "sql/dq/**"
+  workflow_dispatch:        # manual "Run workflow" button (still main-only, per the WIF condition)
+
+concurrency:
+  group: deploy-dq-runner   # never two deploys at once
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write           # lets the job request GitHub's OIDC token for WIF
+
+env:
+  REGION: us-central1
+  IMAGE: us-central1-docker.pkg.dev/crypto-de-dev-4821/crypto-stream/dq-runner
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4      # must come BEFORE auth
+
+      - id: auth
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: projects/874058041757/locations/global/workloadIdentityPools/github/providers/github-oidc
+          service_account: sa-cicd-deployer@crypto-de-dev-4821.iam.gserviceaccount.com
+
+      - uses: google-github-actions/setup-gcloud@v3
+
+      - name: who am I (proves keyless auth worked)
+        run: gcloud auth list --filter=status:ACTIVE --format="value(account)"
+
+      - name: build and push image
+        run: |
+          TAG="${GITHUB_SHA::7}"
+          gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
+          docker build -f docker/dq-runner/Dockerfile -t "${IMAGE}:${TAG}" .
+          docker push "${IMAGE}:${TAG}"
+          echo "TAG=${TAG}" >> "$GITHUB_ENV"
+
+      - name: update Cloud Run job
+        run: |
+          gcloud run jobs update dq-runner \
+            --image="${IMAGE}:${TAG}" \
+            --region="${REGION}"
