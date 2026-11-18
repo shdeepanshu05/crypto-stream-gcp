@@ -11,6 +11,8 @@ locals {
     "workflows.googleapis.com",
     "workflowexecutions.googleapis.com",
     "monitoring.googleapis.com",
+    "sts.googleapis.com",
+    "iamcredentials.googleapis.com",
   ]
 }
 

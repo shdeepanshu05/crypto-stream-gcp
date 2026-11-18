@@ -103,6 +103,7 @@ Verify:
 
 Notes: a new log-based alert can take several minutes to become active (the first test right
 after creation did not fire; the second, 12 minutes later, emailed in under a minute).
+gcloud projects add-iam-policy-binding crypto-de-dev-4821 --member=serviceAccount:sa-tf-provisioner@crypto-de-dev-4821.iam.gserviceaccount.com --role=roles/monitoring.dashboardEditor --condition=None
 
 ## Security notes
 - No service-account keys exist. Never create one.

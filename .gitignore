@@ -46,3 +46,4 @@ tfplan
 *.egg-info/
 build/
 dist/
+gha-creds-*.json
