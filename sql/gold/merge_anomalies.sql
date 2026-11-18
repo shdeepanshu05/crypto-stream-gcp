@@ -1,6 +1,6 @@
 -- Gold anomalies: three explainable statistical rules. Insert-only and idempotent
 -- (deterministic anomaly_id). Thresholds calibrated 2026-11-17 on ~2 days of data;
--- re-calibrate as history grows (see ADR-0010).
+-- volume_surge recalibrated 2026-11-18 on a 10-hour session (see ADR-0010).
 MERGE `crypto-de-dev-4821.gold.anomalies` AS tgt
 USING (
   WITH
@@ -34,7 +34,9 @@ USING (
       AND ABS(SAFE_DIVIDE(ret_pct - mu, sd)) > 4
   ),
 
-  -- Rule 2: Coinbase 1-min log(volume) vs the trailing 15 min (sessions are short).
+  -- Rule 2: Coinbase 1-min log(volume) vs the trailing 60 min.            -- CHANGED (was 15 min)
+  -- A 15-min baseline underestimated normal variability and inflated z (24 flags in 10 h);
+  -- 60 min with >= 40 bars gave 9 flags and removes the session warm-up artifact.
   bars AS (
     SELECT product_id, minute_start,
            CAST(volume AS FLOAT64) AS vol,
@@ -50,16 +52,17 @@ USING (
            COUNT(*) OVER trail AS n
     FROM bars
     WINDOW trail AS (PARTITION BY product_id ORDER BY UNIX_SECONDS(minute_start)
-                     RANGE BETWEEN 900 PRECEDING AND 1 PRECEDING)
+                     RANGE BETWEEN 3600 PRECEDING AND 1 PRECEDING)          -- CHANGED (was 900)
   ),
   volume_surge AS (
     SELECT 'volume_surge' AS rule, product_id AS entity, minute_start AS event_ts,
-           IF(SAFE_DIVIDE(lv - mu, sd) > 5, 'HIGH', 'MEDIUM') AS severity,
+           IF(SAFE_DIVIDE(lv - mu, sd) > 4, 'HIGH', 'MEDIUM') AS severity,   -- CHANGED (was > 5)
            vol AS observed, EXP(mu) AS baseline, sd AS spread,
            SAFE_DIVIDE(lv - mu, sd) AS zscore,
-           FORMAT('volume %.4f vs typical %.4f (geometric mean, trailing 15 min, n=%d)', vol, EXP(mu), n) AS details
+           FORMAT('volume %.4f = %.1fx typical %.4f (geometric mean, trailing 60 min, n=%d)',
+                  vol, SAFE_DIVIDE(vol, EXP(mu)), EXP(mu), n) AS details    -- CHANGED (shows the multiple)
     FROM bars_scored
-    WHERE n >= 10
+    WHERE n >= 40                                                           -- CHANGED (was 10)
       AND SAFE_DIVIDE(lv - mu, sd) > 3
   ),
 
