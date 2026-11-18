@@ -99,12 +99,7 @@ resource "google_service_account_iam_member" "deployer_acts_as_ingest" {
   member             = local.sa["sa-cicd-deployer"]
 }
 
-# Local deploys until Phase 15 (then GitHub Actions takes over and this is removed)
-resource "google_service_account_iam_member" "admin_impersonates_deployer" {
-  service_account_id = google_service_account.workload["sa-cicd-deployer"].name
-  role               = "roles/iam.serviceAccountTokenCreator"
-  member             = "user:${var.admin_email}"
-}
+
 # Admin may impersonate the orchestrator to run SQL by hand (backfill MERGE).
 # Later, Workflows runs these as sa-orchestrator automatically.
 resource "google_service_account_iam_member" "admin_impersonates_orchestrator" {
