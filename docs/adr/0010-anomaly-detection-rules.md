@@ -39,7 +39,7 @@ scanned per run, and fits the existing pipeline as one MERGE.
 
 ## Amendment 2026-11-18: volume_surge recalibration
 
-**Trigger.** The first long streaming session (overnight 17–18 Nov, about 10 hours, about 1.2 million trades,
+**Trigger.** The first long streaming session (overnight 17–18 Nov, about 10 hours,844,336 distinct trades (Bronze → Silver reconciled 1:1 by trade_id, 0 missing),
 1,208 one-minute candles) gave the volume rule enough data to score. With the original
 15-minute / 10-bar baseline it produced **24 flags**, most of them during quiet overnight hours.
 
