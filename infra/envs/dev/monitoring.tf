@@ -85,8 +85,10 @@ resource "google_monitoring_alert_policy" "elt_pipeline_absent" {
       filter   = "resource.type = \"workflows.googleapis.com/Workflow\" AND metric.type = \"workflows.googleapis.com/finished_execution_count\" AND metric.labels.status = \"SUCCEEDED\""
       duration = "5400s"
       aggregations {
-        alignment_period   = "300s"
-        per_series_aligner = "ALIGN_SUM"
+        alignment_period     = "300s"
+        per_series_aligner   = "ALIGN_SUM"
+        cross_series_reducer = "REDUCE_SUM"
+        group_by_fields      = ["resource.label.workflow_id"]
       }
       trigger {
         count = 1
